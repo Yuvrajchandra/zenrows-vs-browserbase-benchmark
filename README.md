@@ -24,7 +24,7 @@ Zenrows is tested using `mode=auto`, while Browserbase is tested using its defau
 Before running the benchmark, make sure you have:
 
 - Python 3.9 or later
-- A Zenrows API key
+- A Zenrows API key ([create a free account](https://app.zenrows.com/register))
 - A Browserbase API key
 
 ## Installation
@@ -140,13 +140,52 @@ The benchmark produces four CSV files in the `results/` directory:
 
 The raw results can be used to inspect individual requests, HTTP status codes, response times, and success status. The summary files provide aggregated benchmark results for each target.
 
+Summary file columns:
+
+| Column | Meaning |
+| --- | --- |
+| `tool` | `zenrows` or `browserbase` |
+| `target` | Target name, matching `TARGETS` in the script |
+| `url` | Target URL |
+| `total` | Requests sent |
+| `successful` / `failed` | Request counts |
+| `success_rate_pct` | Percentage successful |
+| `avg_ms`, `p50_ms`, `p95_ms` | Response time in **milliseconds** |
+
+A request counts as successful only when the API returns 200, the response has a page
+title, and the page contains that target's phrases from `EXPECTED_CONTENT`. A target with
+no `EXPECTED_CONTENT` entry scores 0%, so the script now refuses to start if one is
+missing.
+
+## Results
+
+From the run committed in `results/`, 100 requests per target at 2 requests per second.
+
+**Response times are recorded in milliseconds.** The `avg_ms`, `p50_ms` and `p95_ms` columns
+are milliseconds, not seconds. Divide by 1,000 before quoting a figure in seconds.
+
+| Target | Protection | Zenrows success | Browserbase success | Zenrows avg | Browserbase avg |
+| --- | --- | --- | --- | --- | --- |
+| IKEA product page | Cloudflare | 100% | 100% | 1,814 ms (1.81 s) | 1,748 ms (1.75 s) |
+| TripAdvisor Paris restaurant listings | DataDome | 100% | 0% | 5,625 ms (5.63 s) | 607 ms (0.61 s) |
+| Walmart AirPod product page | PerimeterX | 100% | 100% | 4,519 ms (4.52 s) | 1,681 ms (1.68 s) |
+| Amazon product page | Akamai | 100% | 49% | 14,226 ms (14.23 s) | 1,357 ms (1.36 s) |
+| Python documentation | none | 100% | 100% | 611 ms (0.61 s) | 517 ms (0.52 s) |
+
+Across the four protected targets: **Zenrows 100%, Browserbase 62.25%.**
+
+Mean response time across all five targets is 5.36 s for Zenrows and 1.18 s for Browserbase.
+Read those alongside the success rates rather than on their own. Browserbase returns
+TripAdvisor in 0.61 s, but every one of those responses is a 403 with no page content.
+
 ## Technologies
 
 - Python
 - Zenrows Fetch API
-- Browserbase Fetch API
-- Requests
-- Browserbase Python SDK
+- Browserbase Fetch API (called over REST, no SDK)
+- aiohttp
+- BeautifulSoup + lxml
+- python-dotenv
 - CSV
 
 ## Related article

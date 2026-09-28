@@ -24,7 +24,7 @@ BROWSERBASE_API_KEY = os.getenv("BROWSERBASE_API_KEY", "")
 
 # targets
 TARGETS = [
-    {"name": "IKEA product page",                  "url": "https://www.ikea.com/us/en/p/kallax-shelf-unit-white-80275887"},
+    {"name": "IKEA product page",                  "url": "https://www.ikea.com/us/en/p/kallax-shelf-unit-white-80275887/"},
     {"name": "TripAdvisor Paris restaurant listings", "url": "https://www.tripadvisor.com/Restaurants-g187147-Paris_Ile_de_France.html"},
     {"name": "Walmart AirPod product page",        "url": "https://www.walmart.com/ip/AirPods-Pro-2nd-generation-with-MagSafe-Case-USB-C/5689919121"},
     {"name": "Amazon product page",              "url": "https://www.amazon.com/dp/B09W2H338D"},
@@ -37,9 +37,29 @@ EXPECTED_CONTENT = {
     "IKEA product page":                   ["KALLAX", "shelf unit"],
     "TripAdvisor Paris restaurant listings": ["Restaurants in Paris", "Top restaurants in Paris"],
     "Walmart AirPod product page":         ["AirPods Pro"],
-    "Amazon search results":               ["wireless working keyboard"],
+    "Amazon product page":                 ["wireless working keyboard"],
     "Python documentation":                ["Python", "Documentation"],
 }
+
+
+def _check_targets_have_expected_content() -> None:
+    """Every target needs an EXPECTED_CONTENT entry.
+
+    A missing entry makes has_expected_content() return False for that target,
+    which scores every one of its requests as a failure regardless of what the
+    page returned. That reads as a real benchmark result, so fail at startup
+    instead.
+    """
+    missing = [t["name"] for t in TARGETS if t["name"] not in EXPECTED_CONTENT]
+    if missing:
+        raise SystemExit(
+            "EXPECTED_CONTENT has no entry for: "
+            + ", ".join(missing)
+            + ". Add one per target, or that target scores 0% success."
+        )
+
+
+_check_targets_have_expected_content()
 
 
 def extract_title(html: str) -> str:
